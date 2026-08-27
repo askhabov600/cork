@@ -247,10 +247,31 @@
     transition: transform 0.3s cubic-bezier(.4,0,.2,1);
   }
   .modal.active .modal-card { transform: translateY(0); }
-  .modal-card h3 {
-    margin: 0 0 16px;
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-header h3 {
+    margin: 0;
     font-size: 17px;
   }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--ink-60);
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+  }
+  .modal-close:hover {
+    color: var(--ink);
+  }
+
   .modal-card textarea {
     width: 100%;
     height: 180px;
@@ -262,16 +283,16 @@
     font-size: 13px;
     color: var(--ink);
     resize: none;
+    outline: none;
     margin-top: 8px;
     margin-bottom: 16px;
-    outline: none;
   }
+
   .modal-actions {
     display: flex;
     gap: 10px;
   }
   .btn-secondary {
-    flex: 1;
     background: var(--field);
     color: var(--ink);
     border: none;
@@ -279,6 +300,7 @@
     border-radius: 12px;
     font-weight: 600;
     cursor: pointer;
+    transition: 0.2s;
   }
   .btn-secondary:hover { background: var(--line); }
 
@@ -341,7 +363,10 @@
 <!-- Модальное окно "Поделиться" -->
 <div class="modal" id="shareModal">
   <div class="modal-card">
-    <h3>Отправить расчёт</h3>
+    <div class="modal-header">
+      <h3>Отправить расчёт</h3>
+      <button class="modal-close" onclick="closeShare()">&times;</button>
+    </div>
     
     <div class="field">
       <label for="share-product">Название товара</label>
@@ -360,8 +385,8 @@
     <textarea id="share-text" readonly></textarea>
     
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeShare()">Отмена</button>
-      <button class="btn-primary" style="margin-top:0;" onclick="copyShareText()">Скопировать</button>
+      <button class="btn-secondary" style="flex: 1.2;" onclick="copyShareText(this)">Скопировать</button>
+      <button class="btn-primary" style="margin-top:0; flex: 1;" onclick="shareWhatsApp()">Поделиться</button>
     </div>
   </div>
 </div>
@@ -523,15 +548,29 @@ function closeShare() {
   document.getElementById('shareModal').classList.remove('active');
 }
 
-function copyShareText() {
+function copyShareText(btn) {
   var textarea = document.getElementById('share-text');
   textarea.select();
   textarea.setSelectionRange(0, 99999);
   navigator.clipboard.writeText(textarea.value).then(() => {
-    closeShare();
+    var oldText = btn.textContent;
+    btn.textContent = 'Скопировано!';
+    setTimeout(() => { btn.textContent = oldText; }, 2000);
   }).catch(err => {
     console.error('Ошибка копирования: ', err);
   });
+}
+
+function shareWhatsApp() {
+  var phoneInput = document.getElementById('share-phone').value;
+  var phone = digitsOnly(phoneInput); 
+  var text = document.getElementById('share-text').value;
+  var encodedText = encodeURIComponent(text);
+  
+  var url = 'https://wa.me/' + phone + '?text=' + encodedText;
+  
+  window.open(url, '_blank');
+  closeShare();
 }
 </script>
 </body>
