@@ -47,8 +47,17 @@
     font-size: 19px;
     font-weight: 700;
     text-align: center;
-    margin: 0 0 22px;
+    margin: 0 0 6px;
     letter-spacing: -0.01em;
+  }
+  
+  .disclaimer {
+    font-size: 11px;
+    color: var(--ink-60);
+    text-align: center;
+    margin-bottom: 22px;
+    line-height: 1.4;
+    padding: 0 10px;
   }
 
   /* segmented tabs */
@@ -139,7 +148,7 @@
     background: var(--accent-soft);
     border: 1px solid var(--accent-line);
     border-radius: 20px;
-    padding: 22px 20px 6px;
+    padding: 22px 20px 22px;
   }
   .result .total-label{
     font-size: 12.5px;
@@ -175,29 +184,96 @@
     color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
+  .row:last-child {
+    padding-bottom: 0;
+  }
 
-  .y-hint{
-    display:flex;
-    justify-content:flex-end;
-    gap: 6px;
-    align-items: baseline;
-    margin-top: 12px;
-    padding: 0 2px;
-  }
-  .y-hint span:first-child{
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .04em;
-    color: var(--ink-60);
-    opacity: .6;
-  }
-  .y-hint span:last-child{
-    font-size: 11.5px;
+  /* Share Button */
+  .btn-primary {
+    display: block;
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 16px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14.5px;
     font-weight: 600;
-    color: var(--ink-60);
-    opacity: .6;
-    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: opacity 0.2s;
   }
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  /* Modal Styles */
+  .modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+  .modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-card {
+    background: var(--card);
+    width: 100%;
+    max-width: 400px;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transform: translateY(15px);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  }
+  .modal.active .modal-card {
+    transform: translateY(0);
+  }
+  .modal-card h3 {
+    margin: 0 0 16px;
+    font-size: 17px;
+  }
+  .modal-card textarea {
+    width: 100%;
+    height: 180px;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    resize: none;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    outline: none;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-secondary {
+    flex: 1;
+    background: var(--field);
+    color: var(--ink);
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: var(--line); }
 
   @media (max-width: 360px){
     .result .total{ font-size: 33px; }
@@ -206,8 +282,6 @@
 </head>
 <body>
 <div class="card">
-  <h1>Калькулятор рассрочки</h1>
-
   <div class="switch" id="switch">
     <span class="switch-indicator"></span>
     <button class="tab active" data-mode="with">С первым взносом</button>
@@ -217,7 +291,7 @@
   <div class="field">
     <label for="cost">Стоимость товара</label>
     <div class="field-box">
-      <input id="cost" type="text" inputmode="numeric" value="10.000">
+      <input id="cost" type="text" inputmode="numeric" value="100.000">
       <span class="unit">₽</span>
     </div>
   </div>
@@ -225,7 +299,7 @@
   <div class="field">
     <label for="months">Срок рассрочки</label>
     <div class="field-box">
-      <input id="months" type="number" min="1" max="24" value="3">
+      <input id="months" type="number" min="1" max="24" value="6">
       <span class="unit">мес.</span>
     </div>
   </div>
@@ -242,47 +316,67 @@
 
   <div class="result">
     <div class="total-label">Итоговая стоимость</div>
-    <div class="total"><span id="out-total">0</span><span class="cur">₽</span></div>
+    <div class="total"><span id="out-total" data-val="0">0</span><span class="cur">₽</span></div>
 
-    <div class="row"><span>Первоначальный взнос</span><span id="out-dp">—</span></div>
-    <div class="row"><span>Ежемесячный платёж</span><span id="out-monthly">—</span></div>
+    <div class="row"><span>Первоначальный взнос</span><span id="out-dp" data-val="0">—</span></div>
+    <div class="row"><span>Ежемесячный платёж</span><span id="out-monthly" data-val="0">—</span></div>
     <div class="row"><span>Переплата в месяц</span><span id="out-overpay-month">—</span></div>
     <div class="row"><span>Вся переплата</span><span id="out-overpay-total">—</span></div>
+  </div>
 
-    <div class="y-hint"><span>Y</span><span id="out-y">0%</span></div>
+  <button class="btn-primary" onclick="openShare()">Поделиться расчётом</button>
+</div>
+
+<!-- Модальное окно "Поделиться" -->
+<div class="modal" id="shareModal">
+  <div class="modal-card">
+    <h3>Отправить расчёт</h3>
+    
+    <div class="field">
+      <label for="share-product">Название товара</label>
+      <div class="field-box" style="height: 44px;">
+        <input id="share-product" type="text" placeholder="Например: iPhone 15" oninput="updateShareText()">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="share-phone">Номер телефона</label>
+      <div class="field-box" style="height: 44px;">
+        <input id="share-phone" type="tel" placeholder="+7 (999) 000-00-00">
+      </div>
+    </div>
+
+    <textarea id="share-text" readonly></textarea>
+    
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeShare()">Отмена</button>
+      <button class="btn-primary" style="margin-top:0;" onclick="copyShareText()">Скопировать</button>
+    </div>
   </div>
 </div>
 
 <script>
-function round50(n)  { return Math.round(n / 50) * 50; }
-function round100(n) { return Math.round(n / 100) * 100; }
+// Округление ВВЕРХ до 50 (чтобы 20666.66 превращалось в 20700)
+function ceil50(n)  { return Math.ceil(n / 50) * 50; }
 
 function calc(cost, months, mode, dp) {
-  // Фиксированная надбавка: 4.2% (0.042) со взносом, 4% (0.04) без взноса
   var rate = mode === 'with' ? 0.042 : 0.04;
-  
   var blank = dp === null;
   var suggestedDp = suggestDp(cost, months, mode);
   var enteredDp = blank ? suggestedDp : dp;
   
-  // Взнос не может превышать стоимость товара
   if (enteredDp > cost) enteredDp = cost;
 
-  // Вычитаем взнос из суммы стоимости товара
   var financedAmount = Math.max(0, cost - enteredDp);
-  
-  // Делаем надбавку на оставшуюся сумму
   var totalFinanced = financedAmount + (financedAmount * rate * months);
   
-  // Ежемесячный платеж (округление до 50)
   var basePayment = months > 0 ? totalFinanced / months : 0;
-  var monthly = round50(basePayment);
+  // Используем округление вверх до 50 для платежа
+  var monthly = ceil50(basePayment);
   
-  // Итоговая сумма складывается из внесенного ПВ и округленных платежей
   var total = enteredDp + (monthly * months);
-  
   var overpayTotal = total - cost;
-  if (overpayTotal < 0) overpayTotal = 0; // На случай если округление ушло в минус при 0 стоимости
+  if (overpayTotal < 0) overpayTotal = 0; 
   
   var overpayMonth = months > 0 ? overpayTotal / months : 0;
   var y = cost !== 0 ? overpayTotal / cost : 0;
@@ -291,8 +385,7 @@ function calc(cost, months, mode, dp) {
 }
 
 function suggestDp(cost, months, mode) {
-  // Предлагаемый взнос по умолчанию (20% от стоимости товара, округлено до 50)
-  return mode === 'with' ? round50(cost * 0.2) : 0;
+  return mode === 'with' ? ceil50(cost * 0.2) : 0;
 }
 
 // -------- formatting --------
@@ -328,8 +421,8 @@ var dpField = document.getElementById('dp-field');
 var switchEl = document.getElementById('switch');
 var tabButtons = document.querySelectorAll('.tab');
 
-var mode = 'with';
-var dpTouched = false;
+var mode = 'without'; // По умолчанию запускаем режим "без взноса"
+var dpTouched = true; // Учитываем нуль по умолчанию
 
 function refreshDpPlaceholder() {
   if (dpTouched) return;
@@ -342,12 +435,22 @@ function render() {
   var dp = dpTouched ? readAmount(dpEl) : null;
   var r = calc(cost, months, mode, dp);
 
+  // Обновляем текст
   document.getElementById('out-total').textContent = money(r.total);
   document.getElementById('out-dp').textContent = money(r.dp) + ' ₽';
   document.getElementById('out-monthly').textContent = money(r.monthly) + ' ₽ × ' + months;
   document.getElementById('out-overpay-month').textContent = money(r.overpayMonth) + ' ₽';
   document.getElementById('out-overpay-total').textContent = money(r.overpayTotal) + ' ₽';
-  document.getElementById('out-y').textContent = (r.y * 100).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + '%';
+
+  // Сохраняем чистые отформатированные данные для попапа Share
+  document.getElementById('out-total').dataset.val = money(r.total);
+  document.getElementById('out-dp').dataset.val = money(r.dp);
+  document.getElementById('out-monthly').dataset.val = money(r.monthly);
+  document.getElementById('cost').dataset.val = money(cost);
+  
+  if (document.getElementById('shareModal').classList.contains('active')) {
+      updateShareText();
+  }
 }
 
 tabButtons.forEach(function (btn) {
@@ -355,9 +458,15 @@ tabButtons.forEach(function (btn) {
     mode = btn.dataset.mode;
     tabButtons.forEach(function (b) { b.classList.toggle('active', b === btn); });
     switchEl.classList.toggle('mode-without', mode === 'without');
-    monthsEl.value = mode === 'with' ? 3 : 6;
+    
+    if (mode === 'with') {
+        dpTouched = false;
+    } else {
+        writeAmount(dpEl, 0);
+        dpTouched = true;
+    }
+    
     dpField.classList.toggle('hidden', mode === 'without');
-    dpTouched = false;
     refreshDpPlaceholder();
     render();
   });
@@ -367,8 +476,53 @@ bindThousands(costEl, function () { refreshDpPlaceholder(); render(); });
 bindThousands(dpEl, function () { dpTouched = true; render(); });
 monthsEl.addEventListener('input', function () { refreshDpPlaceholder(); render(); });
 
-refreshDpPlaceholder();
+// Инициализация при старте (режим без взноса)
+switchEl.classList.add('mode-without');
+tabButtons[0].classList.remove('active');
+tabButtons[1].classList.add('active');
+dpField.classList.add('hidden');
 render();
+
+// -------- логика окна поделиться --------
+function updateShareText() {
+  var product = document.getElementById('share-product').value || 'Товар';
+  var cost = document.getElementById('cost').dataset.val || '0';
+  var dp = document.getElementById('out-dp').dataset.val || '0';
+  var months = document.getElementById('months').value || '0';
+  var monthly = document.getElementById('out-monthly').dataset.val || '0';
+  var total = document.getElementById('out-total').dataset.val || '0';
+
+  var text = `🏷️ *РАССРОЧКА: ${product}*\n\n` +
+             `💵 Стоимость товара: ${cost} ₽\n` +
+             `🏦 Первоначальный взнос: ${dp} ₽\n` +
+             `📆 Срок: ${months} мес.\n` +
+             `✅ *Ежемесячный платёж:* ${monthly} ₽\n` +
+             `💰 *ИТОГОВАЯ СУММА:* ${total} ₽\n\n` +
+             `⚡ Платёж округлён вверх до 50₽, итог = ${monthly} ₽ × ${months} мес.`;
+             
+  document.getElementById('share-text').value = text;
+}
+
+function openShare() {
+  document.getElementById('shareModal').classList.add('active');
+  updateShareText();
+}
+
+function closeShare() {
+  document.getElementById('shareModal').classList.remove('active');
+}
+
+function copyShareText() {
+  var textarea = document.getElementById('share-text');
+  textarea.select();
+  textarea.setSelectionRange(0, 99999); // Для мобильных устройств
+  navigator.clipboard.writeText(textarea.value).then(() => {
+    alert('Текст скопирован в буфер обмена!');
+    closeShare();
+  }).catch(err => {
+    console.error('Ошибка копирования: ', err);
+  });
+}
 </script>
 </body>
 </html>
