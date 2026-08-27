@@ -47,17 +47,8 @@
     font-size: 19px;
     font-weight: 700;
     text-align: center;
-    margin: 0 0 6px;
+    margin: 0 0 22px;
     letter-spacing: -0.01em;
-  }
-  
-  .disclaimer {
-    font-size: 11px;
-    color: var(--ink-60);
-    text-align: center;
-    margin-bottom: 22px;
-    line-height: 1.4;
-    padding: 0 10px;
   }
 
   /* segmented tabs */
@@ -148,7 +139,7 @@
     background: var(--accent-soft);
     border: 1px solid var(--accent-line);
     border-radius: 20px;
-    padding: 22px 20px 22px;
+    padding: 22px 20px 6px;
   }
   .result .total-label{
     font-size: 12.5px;
@@ -184,8 +175,28 @@
     color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
-  .row:last-child {
-    padding-bottom: 0;
+
+  .y-hint{
+    display:flex;
+    justify-content:flex-end;
+    gap: 6px;
+    align-items: baseline;
+    margin-top: 12px;
+    padding: 0 2px;
+  }
+  .y-hint span:first-child{
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--ink-60);
+    opacity: .6;
+  }
+  .y-hint span:last-child{
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-60);
+    opacity: .6;
+    font-variant-numeric: tabular-nums;
   }
 
   /* Share Button */
@@ -201,12 +212,10 @@
     font-size: 14.5px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 16px;
+    margin-top: 22px;
     transition: opacity 0.2s;
   }
-  .btn-primary:hover {
-    opacity: 0.9;
-  }
+  .btn-primary:hover { opacity: 0.9; }
 
   /* Modal Styles */
   .modal {
@@ -237,9 +246,7 @@
     transform: translateY(15px);
     transition: transform 0.3s cubic-bezier(.4,0,.2,1);
   }
-  .modal.active .modal-card {
-    transform: translateY(0);
-  }
+  .modal.active .modal-card { transform: translateY(0); }
   .modal-card h3 {
     margin: 0 0 16px;
     font-size: 17px;
@@ -282,10 +289,12 @@
 </head>
 <body>
 <div class="card">
+  <h1>Калькулятор рассрочки</h1>
+
   <div class="switch" id="switch">
     <span class="switch-indicator"></span>
-    <button class="tab active" data-mode="with">С первым взносом</button>
-    <button class="tab" data-mode="without">Без взноса</button>
+    <button class="tab" data-mode="with">С первым взносом</button>
+    <button class="tab active" data-mode="without">Без взноса</button>
   </div>
 
   <div class="field">
@@ -304,7 +313,7 @@
     </div>
   </div>
 
-  <div class="field" id="dp-field">
+  <div class="field hidden" id="dp-field">
     <label for="dp">Первоначальный взнос</label>
     <div class="field-box">
       <input id="dp" type="text" inputmode="numeric" value="0">
@@ -322,6 +331,8 @@
     <div class="row"><span>Ежемесячный платёж</span><span id="out-monthly" data-val="0">—</span></div>
     <div class="row"><span>Переплата в месяц</span><span id="out-overpay-month">—</span></div>
     <div class="row"><span>Вся переплата</span><span id="out-overpay-total">—</span></div>
+
+    <div class="y-hint"><span>Y</span><span id="out-y">0%</span></div>
   </div>
 
   <button class="btn-primary" onclick="openShare()">Поделиться расчётом</button>
@@ -356,8 +367,9 @@
 </div>
 
 <script>
-// Округление ВВЕРХ до 50 (чтобы 20666.66 превращалось в 20700)
+// Округление ВВЕРХ до 50
 function ceil50(n)  { return Math.ceil(n / 50) * 50; }
+function round100(n) { return Math.round(n / 100) * 100; }
 
 function calc(cost, months, mode, dp) {
   var rate = mode === 'with' ? 0.042 : 0.04;
@@ -371,7 +383,6 @@ function calc(cost, months, mode, dp) {
   var totalFinanced = financedAmount + (financedAmount * rate * months);
   
   var basePayment = months > 0 ? totalFinanced / months : 0;
-  // Используем округление вверх до 50 для платежа
   var monthly = ceil50(basePayment);
   
   var total = enteredDp + (monthly * months);
@@ -421,8 +432,8 @@ var dpField = document.getElementById('dp-field');
 var switchEl = document.getElementById('switch');
 var tabButtons = document.querySelectorAll('.tab');
 
-var mode = 'without'; // По умолчанию запускаем режим "без взноса"
-var dpTouched = true; // Учитываем нуль по умолчанию
+var mode = 'without'; // Запуск в режиме "Без взноса"
+var dpTouched = true; // Учитываем ноль по умолчанию для этого режима
 
 function refreshDpPlaceholder() {
   if (dpTouched) return;
@@ -435,12 +446,13 @@ function render() {
   var dp = dpTouched ? readAmount(dpEl) : null;
   var r = calc(cost, months, mode, dp);
 
-  // Обновляем текст
+  // Вывод данных
   document.getElementById('out-total').textContent = money(r.total);
   document.getElementById('out-dp').textContent = money(r.dp) + ' ₽';
   document.getElementById('out-monthly').textContent = money(r.monthly) + ' ₽ × ' + months;
   document.getElementById('out-overpay-month').textContent = money(r.overpayMonth) + ' ₽';
   document.getElementById('out-overpay-total').textContent = money(r.overpayTotal) + ' ₽';
+  document.getElementById('out-y').textContent = (r.y * 100).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + '%';
 
   // Сохраняем чистые отформатированные данные для попапа Share
   document.getElementById('out-total').dataset.val = money(r.total);
@@ -461,9 +473,11 @@ tabButtons.forEach(function (btn) {
     
     if (mode === 'with') {
         dpTouched = false;
+        monthsEl.value = 3;
     } else {
         writeAmount(dpEl, 0);
         dpTouched = true;
+        monthsEl.value = 6;
     }
     
     dpField.classList.toggle('hidden', mode === 'without');
@@ -476,11 +490,8 @@ bindThousands(costEl, function () { refreshDpPlaceholder(); render(); });
 bindThousands(dpEl, function () { dpTouched = true; render(); });
 monthsEl.addEventListener('input', function () { refreshDpPlaceholder(); render(); });
 
-// Инициализация при старте (режим без взноса)
+// Инициализация интерфейса
 switchEl.classList.add('mode-without');
-tabButtons[0].classList.remove('active');
-tabButtons[1].classList.add('active');
-dpField.classList.add('hidden');
 render();
 
 // -------- логика окна поделиться --------
@@ -515,9 +526,8 @@ function closeShare() {
 function copyShareText() {
   var textarea = document.getElementById('share-text');
   textarea.select();
-  textarea.setSelectionRange(0, 99999); // Для мобильных устройств
+  textarea.setSelectionRange(0, 99999);
   navigator.clipboard.writeText(textarea.value).then(() => {
-    alert('Текст скопирован в буфер обмена!');
     closeShare();
   }).catch(err => {
     console.error('Ошибка копирования: ', err);
