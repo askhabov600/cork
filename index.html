@@ -396,8 +396,20 @@
 function ceil50(n)  { return Math.ceil(n / 50) * 50; }
 function round100(n) { return Math.round(n / 100) * 100; }
 
+// Порог для дешёвых товаров
+var SMALL_LIMIT = 15000;
+
+function getRate(cost, mode) {
+  if (cost <= SMALL_LIMIT) {
+    // Товар до 15 000 ₽: без взноса 10% в месяц, со взносом 7% в месяц (срок и сумма взноса не важны)
+    return mode === 'with' ? 0.07 : 0.10;
+  }
+  // Товар дороже 15 000 ₽ — как было
+  return mode === 'with' ? 0.042 : 0.04;
+}
+
 function calc(cost, months, mode, dp) {
-  var rate = mode === 'with' ? 0.042 : 0.04;
+  var rate = getRate(cost, mode);
   var blank = dp === null;
   var suggestedDp = suggestDp(cost, months, mode);
   var enteredDp = blank ? suggestedDp : dp;
